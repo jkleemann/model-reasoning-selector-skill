@@ -1,0 +1,4 @@
+interface:
+  display_name: "Select Subagent Profiles"
+  short_description: "Choose efficient subagent models and reasoning"
+  default_prompt: "Use $select-subagent-profiles to annotate or refresh a subagent-driven implementation plan."
