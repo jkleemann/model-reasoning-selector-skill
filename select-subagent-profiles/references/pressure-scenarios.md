@@ -29,6 +29,8 @@ Expected with skill:
 - Each task receives a `### Subagent Execution` start section.
 - Task 1 and 3 are Low; Task 2 is High, not Very High, because it is provider parsing/continuation contract work rather than the full application-owned provider loop.
 - Implementer and reviewer reasoning are separate.
+- If the harness is Codex, `Preferred worker/model` uses concrete model IDs (`gpt-5.4-mini`, `gpt-5.4`, `gpt-5.5`) rather than `Codex Spark`, `Standard Codex`, or `Most capable Codex`.
+- Activation report includes `Model source`.
 
 ## Scenario 2: Review Changed Task Complexity
 
@@ -88,3 +90,36 @@ Expected with skill:
 - Write status is skipped.
 - Report says no subagent-driven tasks were detected.
 - No profile table is forced into the document.
+
+## Scenario 5: Codex Concrete Model Requirement
+
+Pressure: the user says Codex dispatch fails unless the table and task section name a concrete model.
+
+Context:
+
+```text
+Harness: Codex
+Available models: gpt-5.4-mini, gpt-5.4, gpt-5.5
+Reasoning levels: low, medium, high, xhigh
+```
+
+Plan:
+
+```markdown
+### Task 1: Update Generated Snapshot Expectations
+Mechanical update after a known generator output change.
+
+### Task 2: Migrate Jackson Persistence Converter To Jackson 3
+Replace ObjectMapper construction and serialization API usage in a persistence converter. Preserve stored JSON compatibility and focused regression tests.
+
+### Task 3: Final Whole-Branch Review
+Review all task diffs for release-line and Boot 4 migration regressions.
+```
+
+Expected with skill:
+
+- Task 1 uses `gpt-5.4-mini` with low or medium reasoning.
+- Task 2 uses `gpt-5.4` with high reasoning unless the task grows into cross-module lifecycle work.
+- Task 3 uses `gpt-5.5` with high or xhigh reviewer reasoning.
+- No row or task section uses only `Codex Spark`, `Standard Codex`, or `Most capable Codex`.
+- Activation report says model source came from Codex harness metadata or explicit context.
