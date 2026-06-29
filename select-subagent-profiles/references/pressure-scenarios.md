@@ -225,4 +225,4 @@ Expected with skill:
 - Fixed activation report header appears.
 - The selected worker/model is a concrete Copilot CLI dispatchable model ID, not `auto` and not a placeholder alias.
 - The fallback follows the ordered candidate list from `copilot-current`.
-- Activation report records `claude-opus-4.7` as unavailable and selects `claude-opus-4.8` or the next ranked compatible candidate.
+- Activation report records `claude-opus-4.7` as unavailable and selects `claude-sonnet-4.6` or the next ranked High-compatible candidate.
