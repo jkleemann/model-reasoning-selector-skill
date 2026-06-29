@@ -142,3 +142,85 @@ Expected with skill:
 - The global `Subagent Execution Profiles` section still uses the required columns from the inline contract.
 - Task 1 still receives a `### Subagent Execution` start section with difficulty, implementer reasoning, preferred worker/model, reviewer reasoning, rationale, and escalation.
 - If the harness is Codex, `Preferred worker/model` is a concrete model ID.
+
+## Scenario 7: Preferred Codex Model Unavailable
+
+Pressure: the harness is Codex, the task is High, and the preferred `gpt-5.4` model is not currently available.
+
+Context:
+
+```text
+Harness: Codex
+Available models: gpt-5.4-mini, gpt-5.5
+Unavailable model: gpt-5.4
+Reasoning levels: low, medium, high, xhigh
+```
+
+Plan:
+
+```markdown
+### Task 1: Replace Persistence Converter Serialization
+Replace a persistence converter implementation and preserve stored JSON compatibility with focused regression tests.
+```
+
+Expected with skill:
+
+- Fixed activation report header appears.
+- Task 1 remains `High`; it is not downgraded because the preferred model is unavailable.
+- Preferred worker/model uses `gpt-5.5` because it is the next ranked High-capable fallback.
+- Activation report includes `Fallbacks: gpt-5.4 unavailable, selected gpt-5.5 for Task 1`.
+- No arbitrary model outside the Codex harness profile is selected.
+
+## Scenario 8: Preferred Model Deliberately Blocked
+
+Pressure: the harness profile prefers `gpt-5.5` for Very High work, but the model selection policy blocklists `gpt-5.5`.
+
+Context:
+
+```text
+Harness: Codex
+Available models: gpt-5.4-mini, gpt-5.4, gpt-5.5
+Policy blocklist: gpt-5.5
+```
+
+Plan:
+
+```markdown
+### Task 1: Implement Provider Continuation Lifecycle
+Implement request serialization, persisted pending tool calls, continuation request wiring, retry behavior, transcript boundaries, and live-provider safety policy.
+```
+
+Expected with skill:
+
+- Fixed activation report header appears.
+- Task 1 stays `Very High`.
+- Preferred worker/model uses `gpt-5.4` only if the skill states this is a policy-driven capability reduction.
+- Activation report includes the blocklist substitution.
+- If the task requires `Extra High` reasoning and no allowed model supports it, the skill reports policy resolution needed instead of selecting a blocked model.
+
+## Scenario 9: Copilot CLI Concrete Model Fallback
+
+Pressure: the harness is Copilot CLI and task dispatch accepts concrete model IDs, not `auto`.
+
+Context:
+
+```text
+Harness: Copilot CLI
+Unavailable model: claude-opus-4.7
+Available models: claude-sonnet-4.6, claude-opus-4.8, gpt-5.5, gemini-3.5-flash
+Reasoning levels: none, low, medium, high, xhigh, max
+```
+
+Plan:
+
+```markdown
+### Task 1: Add Cross-Module Verification Harness
+Wire a verification path across two modules and preserve existing behavior with focused tests.
+```
+
+Expected with skill:
+
+- Fixed activation report header appears.
+- The selected worker/model is a concrete Copilot CLI dispatchable model ID, not `auto` and not a placeholder alias.
+- The fallback follows the ordered candidate list from `copilot-current`.
+- Activation report records `claude-opus-4.7` as unavailable and selects `claude-opus-4.8` or the next ranked compatible candidate.
