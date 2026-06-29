@@ -22,11 +22,11 @@ harness_profile:
       tier: "low"
     - id: "gpt-5.4"
       roles: ["implementer", "reviewer"]
-      supports_reasoning: ["medium", "high"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
       tier: "high"
     - id: "gpt-5.5"
       roles: ["implementer", "reviewer"]
-      supports_reasoning: ["high", "xhigh"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
       tier: "very_high"
   task_profile_map:
     Low:

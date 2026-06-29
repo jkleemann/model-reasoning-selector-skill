@@ -143,10 +143,10 @@ harness_profile:
     Low:
       implementer:
         reasoning: "low"
-        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+        candidates: ["gpt-5.4-mini", "gemini-3.5-flash", "claude-sonnet-4.6"]
       reviewer:
         reasoning: "low"
-        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+        candidates: ["gpt-5.4-mini", "gemini-3.5-flash", "claude-sonnet-4.6"]
     Medium:
       implementer:
         reasoning: "medium"
@@ -171,10 +171,10 @@ harness_profile:
     Extra High:
       implementer:
         reasoning: "max"
-        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "claude-opus-4.6"]
       reviewer:
         reasoning: "max"
-        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "claude-opus-4.6"]
   policy:
     allowlist: []
     blocklist: []

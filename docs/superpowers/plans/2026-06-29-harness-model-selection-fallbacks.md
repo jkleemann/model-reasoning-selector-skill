@@ -84,11 +84,11 @@ harness_profile:
       tier: "low"
     - id: "gpt-5.4"
       roles: ["implementer", "reviewer"]
-      supports_reasoning: ["medium", "high"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
       tier: "high"
     - id: "gpt-5.5"
       roles: ["implementer", "reviewer"]
-      supports_reasoning: ["high", "xhigh"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
       tier: "very_high"
   task_profile_map:
     Low:
@@ -278,10 +278,10 @@ harness_profile:
     Low:
       implementer:
         reasoning: "low"
-        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+        candidates: ["gpt-5.4-mini", "gemini-3.5-flash", "claude-sonnet-4.6"]
       reviewer:
         reasoning: "low"
-        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+        candidates: ["gpt-5.4-mini", "gemini-3.5-flash", "claude-sonnet-4.6"]
     Medium:
       implementer:
         reasoning: "medium"
@@ -306,10 +306,10 @@ harness_profile:
     Extra High:
       implementer:
         reasoning: "max"
-        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "claude-opus-4.6"]
       reviewer:
         reasoning: "max"
-        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "claude-opus-4.6"]
   policy:
     allowlist: []
     blocklist: []
