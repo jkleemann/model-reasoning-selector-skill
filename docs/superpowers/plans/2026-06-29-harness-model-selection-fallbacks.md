@@ -389,7 +389,7 @@ For harnesses that expose aliases instead of concrete model IDs, use approved di
 Change the existing model-discovery step to require catalog resolution:
 
 ```markdown
-4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names for harness/provider inference unless they already come with a ranked candidate list. Resolve the task through the harness profile's ordered candidate list when available. If no profile or candidate list is available, state that model capability discovery failed. When the harness is Codex and no fresher candidate list is available, use the built-in Codex Model Mapping before generic classes; otherwise use generic classes only where the harness permits them.
+4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names for harness/provider inference unless they already come with a ranked candidate list. Resolve the task through the harness profile's ordered candidate list when available. When the harness is Codex and no fresher candidate list is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If neither a harness profile, ranked candidate list, nor built-in Codex mapping is available, state that model capability discovery failed and use generic classes only where the harness permits them.
 ```
 
 - [ ] **Step 3: Update workflow step 7**
