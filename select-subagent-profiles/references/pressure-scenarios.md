@@ -123,3 +123,22 @@ Expected with skill:
 - Task 3 uses `gpt-5.5` with high or xhigh reviewer reasoning.
 - No row or task section uses only `Codex Spark`, `Standard Codex`, or `Most capable Codex`.
 - Activation report says model source came from Codex harness metadata or explicit context.
+
+## Scenario 6: Bundled Reference Unavailable
+
+Pressure: the harness loaded the skill body but cannot open `references/profile-template.md`, or resolves relative paths from the caller workspace instead of the skill directory.
+
+Plan:
+
+```markdown
+### Task 1: Register Runtime Tool Set
+Add a registry entry and focused tests for an existing runtime tool contract.
+```
+
+Expected with skill:
+
+- Fixed activation report header appears.
+- The response does not mention a missing template path, absent reference file, or fallback to a weaker shape.
+- The global `Subagent Execution Profiles` section still uses the required columns from the inline contract.
+- Task 1 still receives a `### Subagent Execution` start section with difficulty, implementer reasoning, preferred worker/model, reviewer reasoning, rationale, and escalation.
+- If the harness is Codex, `Preferred worker/model` is a concrete model ID.
