@@ -9,7 +9,7 @@ Use this optional copyable example when adding or normalizing subagent execution
 
 These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
 
-Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile.
+Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile or the built-in Codex Model Mapping when no fresher ranked source exists.
 
 Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection; fallback used from `preferred-model` to `selected-model` because `reason`.]
 
@@ -46,11 +46,16 @@ Evaluation of task complexity and recommended model/reasoning selection for suba
 
 Mode: post-review, inferred from review_delta and changed Task 2.
 Write status: updated docs/superpowers/plans/provider-tools.md.
-Model source: system/tool metadata for Codex models (`gpt-5.4-mini`, `gpt-5.4`, `gpt-5.5`; reasoning `low`, `medium`, `high`, `xhigh`).
+Model source: built-in Codex Model Mapping. Candidate order came from built-in Codex Model Mapping.
+Fallbacks: none.
+Added:
+- none.
 Changed:
 - Task 2: Low/Low/`gpt-5.4-mini`/Low reviewer -> Very High/Extra High/`gpt-5.5`/High reviewer because review expanded it into a provider loop with persistence lifecycle and live-provider policy risk.
 Unchanged:
 - 1 task already matched current task complexity.
+Skipped:
+- none.
 ```
 
 No-op:
@@ -61,7 +66,15 @@ Evaluation of task complexity and recommended model/reasoning selection for suba
 Mode: pre-dispatch, explicit from caller.
 Write status: checked only.
 Model source: caller harness_profile.
-No profile changes needed. 8 task profiles already match current task complexity and harness mapping.
+Fallbacks: none.
+Added:
+- none.
+Changed:
+- none.
+Unchanged:
+- 8 task profiles already match current task complexity and harness mapping.
+Skipped:
+- none.
 ```
 
 Skipped:
@@ -72,6 +85,13 @@ Evaluation of task complexity and recommended model/reasoning selection for suba
 Mode: unknown, inferred from prompt.
 Write status: skipped.
 Model source: not needed because no subagent-driven tasks were detected.
+Fallbacks: none.
+Added:
+- none.
+Changed:
+- none.
+Unchanged:
+- none.
 Skipped:
 - No subagent-driven tasks detected in the provided Markdown artifact.
 ```

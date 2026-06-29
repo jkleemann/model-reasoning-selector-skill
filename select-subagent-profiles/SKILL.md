@@ -32,7 +32,7 @@ Then report:
 3. Apply write policy: draft/repair/post-review may update local files; pre-dispatch checks only unless explicitly allowed; implementation-active reports drift unless the user explicitly asks to mutate; unknown prefers patch-only.
 4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then existing plan profiles that already carry ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference. Resolve the task through the first matching ranked candidate source. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
 5. Classify each task and update both the global table and task start section. Current task text wins over stale profile entries.
-6. Choose concrete worker/model names from the current harness whenever dispatch requires them. For Codex, use exact model IDs from the active harness profile.
+6. Choose concrete worker/model names from the first ranked candidate source whenever dispatch requires them. For Codex, use exact model IDs from the active harness profile or the built-in Codex Model Mapping when no fresher ranked source exists.
 7. Apply the Model Selection Policy after ranked candidate lookup and before final worker/model selection, regardless of whether candidates came from a harness profile, installed metadata, tool/system metadata, an existing ranked plan profile, or the built-in Codex mapping. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
@@ -46,7 +46,7 @@ Read `references/profile-template.md` when adding or normalizing plan content.
 
 These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
 
-Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile.
+Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile or the built-in Codex Model Mapping when no fresher ranked source exists.
 
 Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection; fallback used from `preferred-model` to `selected-model` because `reason`.]
 
