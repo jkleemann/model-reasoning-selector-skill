@@ -65,7 +65,7 @@ Evaluation of task complexity and recommended model/reasoning selection for suba
 
 Mode: pre-dispatch, explicit from caller.
 Write status: checked only.
-Model source: caller harness_profile.
+Model source: caller harness_profile. Candidate order came from ranked source `caller harness_profile`.
 Fallbacks: none.
 Added:
 - none.
@@ -84,7 +84,7 @@ Evaluation of task complexity and recommended model/reasoning selection for suba
 
 Mode: unknown, inferred from prompt.
 Write status: skipped.
-Model source: not needed because no subagent-driven tasks were detected.
+Model source: unavailable, generic aliases used. Candidate order came from unavailable.
 Fallbacks: none.
 Added:
 - none.
