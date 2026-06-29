@@ -32,11 +32,42 @@ Then report:
 3. Apply write policy: draft/repair/post-review may update local files; pre-dispatch checks only unless explicitly allowed; implementation-active reports drift unless the user explicitly asks to mutate; unknown prefers patch-only.
 4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then existing plan profiles that already carry ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference. Resolve the task through the first matching ranked candidate source. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
 5. Classify each task and update both the global table and task start section. Current task text wins over stale profile entries.
-6. Choose concrete worker/model names from the current harness whenever dispatch requires them. For Codex, use exact model IDs such as `gpt-5.4-mini`, `gpt-5.4`, or `gpt-5.5`; do not write only `Codex Spark`, `Standard Codex`, or `Most capable Codex` in dispatchable plan tables.
+6. Choose concrete worker/model names from the current harness whenever dispatch requires them. For Codex, use exact model IDs from the active harness profile.
 7. Apply the Model Selection Policy after ranked candidate lookup and before final worker/model selection, regardless of whether candidates came from a harness profile, installed metadata, tool/system metadata, an existing ranked plan profile, or the built-in Codex mapping. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
 Read `references/profile-template.md` when adding or normalizing plan content.
+
+## Plan Content Contract
+
+`references/profile-template.md` is optional example material. The authoritative contract lives here.
+
+### Subagent Execution Profiles
+
+These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
+
+Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile.
+
+Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection; fallback used from `preferred-model` to `selected-model` because `reason`.]
+
+Model source: [caller harness_profile | installed harness metadata | tool/system ranked metadata | existing ranked plan profile | built-in Codex Model Mapping | flat catalog visibility only | unavailable, generic aliases used]. Candidate order came from [ranked source `source-name` | policy `policy-name` | built-in Codex Model Mapping | unavailable].
+
+Escalation rule: if a Low/Medium task gets blocked on codebase comprehension, retry once with Medium/High reasoning before using Extra High. If a task is blocked by missing context, provide the missing context before changing models. If a task is blocked by a wrong plan assumption, stop and update the plan rather than spending a larger model on a bad premise. After two concrete failed attempts caused by reasoning/comprehension limits, escalate the worker/model or reasoning level by one tier and record why.
+
+| Task | Difficulty | Implementer reasoning | Preferred worker/model | Reviewer reasoning | Why |
+| --- | ---: | ---: | --- | ---: | --- |
+| 1. Example Task | Medium | Medium | `gpt-5.4-mini` | Low | Small contract change with clear focused tests. |
+
+### Subagent Execution
+
+Use the execution profile from `Subagent Execution Profiles`, row `Task N`.
+
+- Difficulty: High
+- Implementer reasoning: High
+- Preferred worker/model: `gpt-5.4`
+- Reviewer reasoning: Medium
+- Rationale: Must preserve existing behavior while changing provider wire-format contracts.
+- Escalation: If blocked by missing context, provide context and retry once at the same profile; if blocked twice on reasoning/comprehension, escalate one profile level. If the plan premise is wrong, stop and update the plan.
 
 ## Harness Modes And Write Policy
 

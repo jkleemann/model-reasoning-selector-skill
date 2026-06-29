@@ -1,6 +1,6 @@
 # Profile Template
 
-Use this template when adding or normalizing subagent execution profiles.
+Use this optional copyable example when adding or normalizing subagent execution profiles. The authoritative contract lives inline in `../SKILL.md`; agents must use that contract if bundled reference files are not available in the current harness.
 
 ## Global Section
 
@@ -9,11 +9,11 @@ Use this template when adding or normalizing subagent execution profiles.
 
 These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
 
-Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs such as `gpt-5.4-mini`, `gpt-5.4`, or `gpt-5.5`; do not use only generic labels such as `Codex Spark`.
+Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs from the active harness profile.
 
-Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection.]
+Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection; fallback used from `preferred-model` to `selected-model` because `reason`.]
 
-Model source: [caller harness_profile | system/tool metadata | installed harness metadata | existing plan names | unavailable, generic aliases used].
+Model source: [caller harness_profile | installed harness metadata | tool/system ranked metadata | existing ranked plan profile | built-in Codex Model Mapping | flat catalog visibility only | unavailable, generic aliases used]. Candidate order came from [ranked source `source-name` | policy `policy-name` | built-in Codex Model Mapping | unavailable].
 
 Escalation rule: if a Low/Medium task gets blocked on codebase comprehension, retry once with Medium/High reasoning before using Extra High. If a task is blocked by missing context, provide the missing context before changing models. If a task is blocked by a wrong plan assumption, stop and update the plan rather than spending a larger model on a bad premise. After two concrete failed attempts caused by reasoning/comprehension limits, escalate the worker/model or reasoning level by one tier and record why.
 
