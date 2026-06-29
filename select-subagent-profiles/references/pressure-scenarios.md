@@ -151,6 +151,7 @@ Context:
 
 ```text
 Harness: Codex
+Ranked source: installed harness metadata `codex-openai-default`
 Available models: gpt-5.4-mini, gpt-5.5
 Unavailable model: gpt-5.4
 Reasoning levels: low, medium, high, xhigh
@@ -167,8 +168,8 @@ Expected with skill:
 
 - Fixed activation report header appears.
 - Task 1 remains `High`; it is not downgraded because the preferred model is unavailable.
-- Preferred worker/model uses `gpt-5.5` because it is the next ranked High-capable fallback.
-- Activation report includes `Fallbacks: gpt-5.4 unavailable, selected gpt-5.5 for Task 1`.
+- Preferred worker/model uses `gpt-5.5` because installed harness metadata ranks it as the next High-capable fallback after unavailable `gpt-5.4`.
+- Activation report includes `Model source: installed harness metadata` and `Fallbacks: gpt-5.4 unavailable, selected gpt-5.5 for Task 1`.
 - No arbitrary model outside the Codex harness profile is selected.
 
 ## Scenario 8: Preferred Model Deliberately Blocked
@@ -179,6 +180,7 @@ Context:
 
 ```text
 Harness: Codex
+Ranked source: installed harness metadata `codex-openai-default`
 Available models: gpt-5.4-mini, gpt-5.4, gpt-5.5
 Policy blocklist: gpt-5.5
 ```
@@ -194,9 +196,9 @@ Expected with skill:
 
 - Fixed activation report header appears.
 - Task 1 stays `Very High`.
-- Preferred worker/model uses `gpt-5.4` only if the skill states this is a policy-driven capability reduction.
+- Preferred worker/model uses `gpt-5.4` because installed harness metadata ranks it as the next Very High fallback after policy-blocked `gpt-5.5`.
 - Activation report includes the blocklist substitution.
-- If the task requires `Extra High` reasoning and no allowed model supports it, the skill reports policy resolution needed instead of selecting a blocked model.
+- The skill states that the fallback is a policy-driven capability reduction and does not select the blocked model.
 
 ## Scenario 9: Copilot CLI Concrete Model Fallback
 
