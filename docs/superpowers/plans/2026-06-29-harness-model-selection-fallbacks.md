@@ -371,17 +371,17 @@ Insert this section:
 Harness profiles may provide a `task_profile_map` with ordered candidate models per difficulty and role. Resolve model selection in this order:
 
 1. Classify the task difficulty and implementer/reviewer reasoning target.
-2. Load the matching harness profile from explicit `harness_profile`, system/tool metadata, installed harness metadata, or existing plan model names.
+2. Load the matching harness profile from explicit `harness_profile`, system/tool metadata, installed harness metadata, or harness/provider inference from existing plan model names. Use existing plan model names as a profile source only when they already come with a ranked profile or candidate list.
 3. Read the ordered candidate list for the task difficulty and role.
 4. Remove models blocked by the Model Selection Policy.
 5. If an allowlist exists, remove candidates not present in the allowlist.
 6. Remove candidates that do not support the requested role or reasoning level.
 7. Choose the first remaining candidate.
-8. If no candidate remains, lower reasoning by one adjacent level only when the task difficulty still fits the model tier; otherwise report policy resolution needed.
+8. If no candidate remains, lower reasoning by one adjacent level only when that downgrade restores a ranked candidate that still satisfies role fit, capability fit, and the task's difficulty/risk class; otherwise report policy resolution needed.
 
 Fallbacks must be deterministic. Do not scan a broad provider catalog for an arbitrary substitute unless the harness profile or policy explicitly ranks that model. If a preferred model is unavailable or deliberately blocked, record the substitution in the Activation Report and, when it changes expected capability, in the plan's `Model selection policy` line.
 
-For harnesses that expose aliases instead of concrete model IDs, use approved dispatch aliases from the harness profile. For Codex, use concrete model IDs.
+For harnesses that expose aliases instead of concrete model IDs, use approved dispatch aliases from the harness profile. For Codex, use the built-in Codex Model Mapping and concrete model IDs whenever no fresher ranked candidate list is available.
 ```
 
 - [ ] **Step 2: Update workflow step 4**
@@ -389,7 +389,7 @@ For harnesses that expose aliases instead of concrete model IDs, use approved di
 Change the existing model-discovery step to require catalog resolution:
 
 ```markdown
-4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names. Resolve the task through the harness profile's ordered candidate list when available. If no profile or candidate list is available, state that model capability discovery failed and use generic classes only where the harness permits them.
+4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names for harness/provider inference unless they already come with a ranked candidate list. Resolve the task through the harness profile's ordered candidate list when available. If no profile or candidate list is available, state that model capability discovery failed. When the harness is Codex and no fresher candidate list is available, use the built-in Codex Model Mapping before generic classes; otherwise use generic classes only where the harness permits them.
 ```
 
 - [ ] **Step 3: Update workflow step 7**
