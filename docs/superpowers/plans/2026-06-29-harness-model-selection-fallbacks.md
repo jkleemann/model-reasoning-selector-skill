@@ -372,7 +372,7 @@ Harness profiles may provide a `task_profile_map` with ordered candidate models 
 
 1. Classify the task difficulty and implementer/reviewer reasoning target.
 2. Determine the matching harness/provider from explicit `harness_profile`, installed harness metadata, tool/system metadata, or harness/provider inference from existing plan model names. Prefer sources that include ranked candidates over flat model lists; use existing plan model names as a profile source only when they already come with a ranked profile or candidate list.
-3. Select the ranked candidate source in this order: explicit caller `harness_profile`, installed harness metadata with ranked candidates, tool/system metadata with ranked candidates, then the built-in Codex Model Mapping when the harness is Codex and no fresher ranked source exists.
+3. Select the ranked candidate source in this order: explicit caller `harness_profile`, installed harness metadata with ranked candidates, tool/system metadata with ranked candidates, existing plan profiles that already carry ranked candidates, then the built-in Codex Model Mapping when the harness is Codex and no fresher ranked source exists.
 4. Use flat tool/system model lists only to confirm availability and capability for ranked candidates, or to prove that a visible but unranked catalog exists.
 5. If no ranked candidate source exists but visible catalog evidence does, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of selecting a specific unranked model.
 6. If no ranked candidate source exists and no capability/catalog evidence is visible at all, state that model capability discovery failed.
@@ -389,7 +389,7 @@ For harnesses that expose aliases instead of concrete model IDs, use approved di
 Change the existing model-discovery step to require catalog resolution:
 
 ```markdown
-4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference unless they already come with a ranked candidate list. Resolve the task through the first matching ranked candidate source. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
+4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then existing plan profiles that already carry ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference. Resolve the task through the first matching ranked candidate source. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
 ```
 
 - [ ] **Step 3: Update workflow step 7**
@@ -397,7 +397,7 @@ Change the existing model-discovery step to require catalog resolution:
 Change the policy step to explicitly reference candidate lists:
 
 ```markdown
-7. Apply the Model Selection Policy after harness-profile candidate lookup and before final worker/model selection. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
+7. Apply the Model Selection Policy after ranked candidate lookup and before final worker/model selection, regardless of whether candidates came from a harness profile, installed metadata, tool/system metadata, an existing ranked plan profile, or the built-in Codex mapping. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 ```
 
 - [ ] **Step 4: Update `Required Output`**
@@ -455,7 +455,7 @@ Model selection policy: [none | applied from harness profile `profile-name`; blo
 Replace the current inline `Model source` line with:
 
 ```markdown
-Model source: [caller harness_profile | system/tool metadata | installed harness metadata | existing plan names | unavailable, generic aliases used]. Candidate order came from [harness profile `profile-name` | policy `policy-name` | unavailable].
+Model source: [caller harness_profile | installed harness metadata | tool/system ranked metadata | existing ranked plan profile | built-in Codex Model Mapping | flat catalog visibility only | unavailable, generic aliases used]. Candidate order came from [ranked source `source-name` | policy `policy-name` | built-in Codex Model Mapping | unavailable].
 ```
 
 - [ ] **Step 3: Update the optional template**
