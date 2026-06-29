@@ -22,6 +22,7 @@ Then report:
 - `Mode`: explicit or inferred harness execution mode.
 - `Write status`: updated path, patch only, checked only, or skipped.
 - `Model source`: where concrete model names/reasoning capabilities came from.
+- `Fallbacks`: unavailable preferred models, blocklist substitutions, allowlist removals, reasoning downgrades, or policy-resolution blockers.
 - `Added`, `Changed`, `Unchanged`, and `Skipped` profile work.
 
 ## Workflow
@@ -29,13 +30,49 @@ Then report:
 1. Detect whether the artifact is a subagent-driven implementation plan. Look for numbered tasks, task briefs, acceptance criteria, implementer/reviewer language, `superpowers:subagent-driven-development`, or an existing `Subagent Execution Profiles` section. If absent, skip and emit the required output header.
 2. Detect Harness Execution Mode: explicit caller mode, caller skill, review/dispatch/status context, plan artifact state, workflow language, then `unknown`.
 3. Apply write policy: draft/repair/post-review may update local files; pre-dispatch checks only unless explicitly allowed; implementation-active reports drift unless the user explicitly asks to mutate; unknown prefers patch-only.
-4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names. If none are available, state that model capability discovery failed and use generic classes only where the harness permits them.
+4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then tool metadata/system-exposed model lists, then installed harness metadata, then existing plan model names. Resolve the task through the harness profile's ordered candidate list when available. If no profile or candidate list is available, state that model capability discovery failed and use generic classes only where the harness permits them.
 5. Classify each task and update both the global table and task start section. Current task text wins over stale profile entries.
 6. Choose concrete worker/model names from the current harness whenever dispatch requires them. For Codex, use exact model IDs such as `gpt-5.4-mini`, `gpt-5.4`, or `gpt-5.5`; do not write only `Codex Spark`, `Standard Codex`, or `Most capable Codex` in dispatchable plan tables.
-7. Apply the future Model Selection Policy shape when provided. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference. For large unfiltered catalogs, use generic worker classes and warn instead of choosing arbitrary long-tail models.
+7. Apply the Model Selection Policy after harness-profile candidate lookup and before final worker/model selection. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
-Read `references/profile-template.md` when adding or normalizing plan content.
+## Plan Content Contract
+
+The inline contract in this section is authoritative. `references/profile-template.md` is only an optional copyable example; resolve it relative to this `SKILL.md` file when the harness exposes bundled references. If that reference is unavailable, do not report a template-path problem and do not fall back to a weaker shape. Use the inline contract below.
+
+Add or normalize this global section:
+
+```markdown
+## Subagent Execution Profiles
+
+These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
+
+Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs such as `gpt-5.4-mini`, `gpt-5.4`, or `gpt-5.5`; do not use only generic labels such as `Codex Spark`.
+
+Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection.]
+
+Model source: [caller harness_profile | system/tool metadata | installed harness metadata | existing plan names | unavailable, generic aliases used].
+
+Escalation rule: if a Low/Medium task gets blocked on codebase comprehension, retry once with Medium/High reasoning before using Extra High. If a task is blocked by missing context, provide the missing context before changing models. If a task is blocked by a wrong plan assumption, stop and update the plan rather than spending a larger model on a bad premise. After two concrete failed attempts caused by reasoning/comprehension limits, escalate the worker/model or reasoning level by one tier and record why.
+
+| Task | Difficulty | Implementer reasoning | Preferred worker/model | Reviewer reasoning | Why |
+| --- | ---: | ---: | --- | ---: | --- |
+```
+
+At the start of every subagent-driven task, add or normalize:
+
+```markdown
+### Subagent Execution
+
+Use the execution profile from `Subagent Execution Profiles`, row `Task N`.
+
+- Difficulty: [Low | Medium | High | Very High]
+- Implementer reasoning: [Low | Medium | High | Extra High]
+- Preferred worker/model: `[dispatchable model ID or approved worker alias]`
+- Reviewer reasoning: [Low | Medium | High | Extra High]
+- Rationale: [one sentence tied to task complexity and risk]
+- Escalation: If blocked by missing context, provide context and retry once at the same profile; if blocked twice on reasoning/comprehension, escalate one profile level. If the plan premise is wrong, stop and update the plan.
+```
 
 ## Harness Modes And Write Policy
 
@@ -125,6 +162,23 @@ Model policies are optional now but the skill must leave room for them. Apply po
 7. If no allowed candidate remains, report policy resolution needed.
 
 Large catalogs include explicit `catalog_size: large` or `requires_policy: true`, more than 20 models, broad providers such as `openrouter`, `opencode`, `litellm`, or `anyscale`, or many unrelated provider families. With weak large-catalog signals and no policy, warn and use generic labels such as `fast approved worker`, `standard approved worker`, or `most capable approved worker` only when the harness allows generic aliases. With `requires_policy: true`, do not select a specific model.
+
+## Model Catalog Resolution
+
+Harness profiles may provide a `task_profile_map` with ordered candidate models per difficulty and role. Resolve model selection in this order:
+
+1. Classify the task difficulty and implementer/reviewer reasoning target.
+2. Load the matching harness profile from explicit `harness_profile`, system/tool metadata, installed harness metadata, or existing plan model names.
+3. Read the ordered candidate list for the task difficulty and role.
+4. Remove models blocked by the Model Selection Policy.
+5. If an allowlist exists, remove candidates not present in the allowlist.
+6. Remove candidates that do not support the requested role or reasoning level.
+7. Choose the first remaining candidate.
+8. If no candidate remains, lower reasoning by one adjacent level only when the task difficulty still fits the model tier; otherwise report policy resolution needed.
+
+Fallbacks must be deterministic. Do not scan a broad provider catalog for an arbitrary substitute unless the harness profile or policy explicitly ranks that model. If a preferred model is unavailable or deliberately blocked, record the substitution in the Activation Report and, when it changes expected capability, in the plan's `Model selection policy` line.
+
+For harnesses that expose aliases instead of concrete model IDs, use approved dispatch aliases from the harness profile. For Codex, use concrete model IDs.
 
 ## Common Mistakes
 
