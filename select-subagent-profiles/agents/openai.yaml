@@ -2,3 +2,65 @@ interface:
   display_name: "Select Subagent Profiles"
   short_description: "Choose efficient subagent models and reasoning"
   default_prompt: "Use $select-subagent-profiles to annotate or refresh a subagent-driven implementation plan."
+
+harness_profile:
+  id: "codex-openai-default"
+  harnesses:
+    - "codex"
+    - "openai"
+  catalog_size: "small"
+  requires_policy: false
+  reasoning_levels:
+    - "low"
+    - "medium"
+    - "high"
+    - "xhigh"
+  models:
+    - id: "gpt-5.4-mini"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium"]
+      tier: "low"
+    - id: "gpt-5.4"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      tier: "high"
+    - id: "gpt-5.5"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["high", "xhigh"]
+      tier: "very_high"
+  task_profile_map:
+    Low:
+      implementer:
+        reasoning: "low"
+        candidates: ["gpt-5.4-mini", "gpt-5.4"]
+      reviewer:
+        reasoning: "low"
+        candidates: ["gpt-5.4-mini", "gpt-5.4"]
+    Medium:
+      implementer:
+        reasoning: "medium"
+        candidates: ["gpt-5.4-mini", "gpt-5.4"]
+      reviewer:
+        reasoning: "medium"
+        candidates: ["gpt-5.4-mini", "gpt-5.4"]
+    High:
+      implementer:
+        reasoning: "high"
+        candidates: ["gpt-5.4", "gpt-5.5"]
+      reviewer:
+        reasoning: "high"
+        candidates: ["gpt-5.4", "gpt-5.5"]
+    Very High:
+      implementer:
+        reasoning: "high"
+        candidates: ["gpt-5.5", "gpt-5.4"]
+      reviewer:
+        reasoning: "high"
+        candidates: ["gpt-5.5", "gpt-5.4"]
+    Extra High:
+      implementer:
+        reasoning: "xhigh"
+        candidates: ["gpt-5.5"]
+      reviewer:
+        reasoning: "xhigh"
+        candidates: ["gpt-5.5"]

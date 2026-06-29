@@ -2,3 +2,187 @@ interface:
   display_name: "Select Subagent Profiles"
   short_description: "Choose efficient subagent models and reasoning"
   default_prompt: "Use $select-subagent-profiles to annotate or refresh a subagent-driven implementation plan."
+
+harness_profile:
+  id: "copilot-current"
+  harnesses:
+    - "copilot-cli"
+  harness_version: "1.0.64-0"
+  catalog_size: "managed"
+  requires_policy: false
+  dispatch_surface:
+    task: "concrete model IDs only"
+    create_session: "concrete model IDs or auto"
+    save_workflow: "concrete model IDs or auto"
+  reasoning_levels:
+    - "none"
+    - "low"
+    - "medium"
+    - "high"
+    - "xhigh"
+    - "max"
+  models:
+    - id: "claude-haiku-4.5"
+      display_name: "Claude Haiku 4.5"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: []
+      default_reasoning: "n/a"
+      tier: "low"
+      availability: "available"
+      notes: "No reasoning effort support. Fastest/cheapest Claude option."
+    - id: "claude-sonnet-4.5"
+      display_name: "Claude Sonnet 4.5"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: []
+      default_reasoning: "n/a"
+      tier: "high"
+      availability: "available"
+      notes: "No reasoning effort support."
+    - id: "claude-sonnet-4.6"
+      display_name: "Claude Sonnet 4.6"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high", "max"]
+      default_reasoning: "medium"
+      tier: "high"
+      availability: "available"
+      notes: "Current default model for the inspected session. Balanced quality/cost with reasoning."
+    - id: "claude-opus-4.5"
+      display_name: "Claude Opus 4.5"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: []
+      default_reasoning: "n/a"
+      tier: "very_high"
+      availability: "available"
+      notes: "No reasoning effort support despite Opus tier."
+    - id: "claude-opus-4.6"
+      display_name: "Claude Opus 4.6"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high", "max"]
+      default_reasoning: "medium"
+      tier: "very_high"
+      availability: "available"
+      notes: "Reasoning up to max but no xhigh step."
+    - id: "claude-opus-4.7"
+      display_name: "Claude Opus 4.7"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high", "xhigh", "max"]
+      default_reasoning: "medium"
+      tier: "very_high"
+      availability: "available"
+      notes: "Full reasoning range including xhigh."
+    - id: "claude-opus-4.8"
+      display_name: "Claude Opus 4.8"
+      provider: "Anthropic"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high", "xhigh", "max"]
+      default_reasoning: "medium"
+      tier: "very_high"
+      availability: "available"
+      notes: "Highest-capability Anthropic model. Full reasoning range."
+    - id: "gpt-5.4-mini"
+      display_name: "GPT-5.4 mini"
+      provider: "OpenAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["none", "low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "low"
+      availability: "available"
+      notes: "Lightweight GPT option. Supports none as explicit no-reasoning."
+    - id: "gpt-5.3-codex"
+      display_name: "GPT-5.3-Codex"
+      provider: "OpenAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "high"
+      availability: "available"
+      notes: "Code-optimized GPT model."
+    - id: "gpt-5.4"
+      display_name: "GPT-5.4"
+      provider: "OpenAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["none", "low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "high"
+      availability: "available"
+      notes: "Standard GPT-5.4. Supports none as explicit no-reasoning."
+    - id: "gpt-5.5"
+      display_name: "GPT-5.5"
+      provider: "OpenAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["none", "low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "very_high"
+      availability: "available"
+      notes: "Highest-capability OpenAI model. No max reasoning step."
+    - id: "gemini-3.5-flash"
+      display_name: "Gemini 3.5 Flash"
+      provider: "Google"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "low"
+      availability: "available"
+      notes: "Fastest Google model. No xhigh or max reasoning."
+    - id: "gemini-3.1-pro-preview"
+      display_name: "Gemini 3.1 Pro"
+      provider: "Google"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "high"
+      availability: "available"
+      notes: "Preview model. No xhigh or max reasoning."
+  task_profile_map:
+    Low:
+      implementer:
+        reasoning: "low"
+        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+      reviewer:
+        reasoning: "low"
+        candidates: ["claude-haiku-4.5", "gpt-5.4-mini", "gemini-3.5-flash"]
+    Medium:
+      implementer:
+        reasoning: "medium"
+        candidates: ["claude-sonnet-4.6", "gpt-5.3-codex", "gemini-3.5-flash"]
+      reviewer:
+        reasoning: "medium"
+        candidates: ["claude-sonnet-4.6", "gpt-5.4", "gemini-3.5-flash"]
+    High:
+      implementer:
+        reasoning: "high"
+        candidates: ["claude-opus-4.7", "claude-sonnet-4.6", "gpt-5.5"]
+      reviewer:
+        reasoning: "high"
+        candidates: ["claude-opus-4.7", "gpt-5.5", "claude-sonnet-4.6"]
+    Very High:
+      implementer:
+        reasoning: "xhigh"
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+      reviewer:
+        reasoning: "xhigh"
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+    Extra High:
+      implementer:
+        reasoning: "max"
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+      reviewer:
+        reasoning: "max"
+        candidates: ["claude-opus-4.8", "claude-opus-4.7", "gpt-5.5"]
+  policy:
+    allowlist: []
+    blocklist: []
+    unavailable: []
+    notes:
+      - "'auto' is available only in create_session and save_workflow, not in task dispatch."
+      - "claude-haiku-4.5, claude-sonnet-4.5, and claude-opus-4.5 expose no reasoning effort controls."
+      - "GPT models support 'none' as explicit no-reasoning; Anthropic and Gemini do not."
+      - "Gemini models cap at high reasoning."
+      - "claude-opus-4.6 supports max but not xhigh."
+      - "No enterprise allowlist or blocklist was visible in the inspected session metadata."
