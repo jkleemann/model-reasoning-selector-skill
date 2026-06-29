@@ -647,10 +647,13 @@ Expected: each term appears in the relevant skill or profile files.
 Run:
 
 ```bash
-rg -n "For Codex, use concrete model IDs|gpt-5\\.4-mini|gpt-5\\.4|gpt-5\\.5" select-subagent-profiles/SKILL.md select-subagent-profiles/agents/openai.yaml
+rg -n "For Codex, use exact model IDs|If the harness is Codex, use concrete dispatchable model IDs" select-subagent-profiles/SKILL.md
+for id in gpt-5.4-mini gpt-5.4 gpt-5.5; do
+  rg -n "id: \"$id\"" select-subagent-profiles/agents/openai.yaml
+done
 ```
 
-Expected: `SKILL.md` still requires concrete Codex IDs, and `openai.yaml` contains all three expected Codex model IDs.
+Expected: the first command proves `SKILL.md` still requires concrete Codex IDs, and the loop proves `openai.yaml` contains all three expected Codex model IDs.
 
 - [ ] **Step 3: Verify Copilot profile avoids invented concrete IDs**
 
@@ -658,9 +661,15 @@ Run:
 
 ```bash
 rg -n "claude-haiku-4\\.5|claude-sonnet-4\\.6|claude-opus-4\\.8|gpt-5\\.3-codex|gpt-5\\.5|gemini-3\\.5-flash" select-subagent-profiles/agents/copilot.yaml
+if rg -n "copilot-(fast|standard|most-capable)-approved|copilot-.*-approved" select-subagent-profiles/agents/copilot.yaml; then
+  echo "unexpected Copilot placeholder alias found" >&2
+  exit 1
+else
+  echo "no Copilot placeholder aliases found"
+fi
 ```
 
-Expected: concrete Copilot CLI dispatchable IDs appear, including `claude-haiku-4.5`, `claude-sonnet-4.6`, `claude-opus-4.8`, `gpt-5.3-codex`, `gpt-5.5`, and `gemini-3.5-flash`; no `copilot-*-approved` placeholder aliases remain.
+Expected: concrete Copilot CLI dispatchable IDs appear, including `claude-haiku-4.5`, `claude-sonnet-4.6`, `claude-opus-4.8`, `gpt-5.3-codex`, `gpt-5.5`, and `gemini-3.5-flash`; the negative check prints `no Copilot placeholder aliases found`.
 
 - [ ] **Step 4: Validate YAML again**
 
@@ -682,11 +691,11 @@ select-subagent-profiles/agents/copilot.yaml: ok
 Run:
 
 ```bash
-git diff --stat HEAD
-git diff -- select-subagent-profiles/SKILL.md select-subagent-profiles/agents/openai.yaml select-subagent-profiles/agents/copilot.yaml select-subagent-profiles/references/pressure-scenarios.md select-subagent-profiles/references/profile-template.md
+git diff --stat 7720790..HEAD -- docs/superpowers/plans/2026-06-29-harness-model-selection-fallbacks.md select-subagent-profiles/SKILL.md select-subagent-profiles/agents/openai.yaml select-subagent-profiles/agents/copilot.yaml select-subagent-profiles/references/pressure-scenarios.md select-subagent-profiles/references/profile-template.md
+git diff 7720790..HEAD -- docs/superpowers/plans/2026-06-29-harness-model-selection-fallbacks.md select-subagent-profiles/SKILL.md select-subagent-profiles/agents/openai.yaml select-subagent-profiles/agents/copilot.yaml select-subagent-profiles/references/pressure-scenarios.md select-subagent-profiles/references/profile-template.md
 ```
 
-Expected: diff is limited to model catalog fallback behavior and does not rewrite unrelated skill concepts.
+Expected: committed diff across the implementation range is limited to model catalog fallback behavior and does not rewrite unrelated skill concepts. `git status --short` should still be clean after the committed-range review.
 
 - [ ] **Step 6: Commit final verification fixes if needed**
 
