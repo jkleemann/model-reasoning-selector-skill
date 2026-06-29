@@ -36,43 +36,7 @@ Then report:
 7. Apply the Model Selection Policy after harness-profile candidate lookup and before final worker/model selection. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
-## Plan Content Contract
-
-The inline contract in this section is authoritative. `references/profile-template.md` is only an optional copyable example; resolve it relative to this `SKILL.md` file when the harness exposes bundled references. If that reference is unavailable, do not report a template-path problem and do not fall back to a weaker shape. Use the inline contract below.
-
-Add or normalize this global section:
-
-```markdown
-## Subagent Execution Profiles
-
-These profiles are orchestration hints for `superpowers:subagent-driven-development`; they are not the domain `ReasoningLevel` stored on authoring tasks.
-
-Use the least expensive worker that fits the task's expected total turns and risk. The current harness maps difficulty and reasoning labels to concrete available workers/models. If the harness is Codex, use concrete dispatchable model IDs such as `gpt-5.4-mini`, `gpt-5.4`, or `gpt-5.5`; do not use only generic labels such as `Codex Spark`.
-
-Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection.]
-
-Model source: [caller harness_profile | system/tool metadata | installed harness metadata | existing plan names | unavailable, generic aliases used].
-
-Escalation rule: if a Low/Medium task gets blocked on codebase comprehension, retry once with Medium/High reasoning before using Extra High. If a task is blocked by missing context, provide the missing context before changing models. If a task is blocked by a wrong plan assumption, stop and update the plan rather than spending a larger model on a bad premise. After two concrete failed attempts caused by reasoning/comprehension limits, escalate the worker/model or reasoning level by one tier and record why.
-
-| Task | Difficulty | Implementer reasoning | Preferred worker/model | Reviewer reasoning | Why |
-| --- | ---: | ---: | --- | ---: | --- |
-```
-
-At the start of every subagent-driven task, add or normalize:
-
-```markdown
-### Subagent Execution
-
-Use the execution profile from `Subagent Execution Profiles`, row `Task N`.
-
-- Difficulty: [Low | Medium | High | Very High]
-- Implementer reasoning: [Low | Medium | High | Extra High]
-- Preferred worker/model: `[dispatchable model ID or approved worker alias]`
-- Reviewer reasoning: [Low | Medium | High | Extra High]
-- Rationale: [one sentence tied to task complexity and risk]
-- Escalation: If blocked by missing context, provide context and retry once at the same profile; if blocked twice on reasoning/comprehension, escalate one profile level. If the plan premise is wrong, stop and update the plan.
-```
+Read `references/profile-template.md` when adding or normalizing plan content.
 
 ## Harness Modes And Write Policy
 
