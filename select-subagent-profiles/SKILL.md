@@ -36,7 +36,7 @@ Then report:
 7. Apply the Model Selection Policy after ranked candidate lookup and before final worker/model selection, regardless of whether candidates came from a harness profile, installed metadata, tool/system metadata, an existing ranked plan profile, or the built-in Codex mapping. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
-Read `references/profile-template.md` when adding or normalizing plan content.
+Use the inline `Plan Content Contract` below when adding or normalizing plan content. `references/profile-template.md` is optional example material only.
 
 ## Plan Content Contract
 
@@ -98,7 +98,7 @@ Reviewer reasoning is usually one step below implementer reasoning for bounded d
 
 ## Codex Model Mapping
 
-When the current harness is Codex and no fresher harness profile is supplied, use this concrete mapping:
+When the current harness is Codex and no fresher ranked candidate source is available, use this concrete mapping:
 
 | Task profile | Preferred model | Reasoning |
 | --- | --- | --- |
