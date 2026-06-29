@@ -557,12 +557,12 @@ Expected with skill:
 
 - Fixed activation report header appears.
 - Task 1 stays `Very High`.
-- Preferred worker/model uses `gpt-5.4` only if the skill states this is a policy-driven capability reduction.
+- Preferred worker/model uses `gpt-5.4` because installed harness metadata ranks it as the next Very High fallback after policy-blocked `gpt-5.5`.
 - Activation report includes the blocklist substitution.
-- If the task requires `Extra High` reasoning and no allowed model supports it, the skill reports policy resolution needed instead of selecting a blocked model.
+- The skill states that the fallback is a policy-driven capability reduction and does not select the blocked model.
 ````
 
-- [ ] **Step 3: Add scenario for Copilot managed aliases**
+- [ ] **Step 3: Add scenario for Copilot CLI concrete model fallback**
 
 Append:
 
@@ -592,7 +592,7 @@ Expected with skill:
 - Fixed activation report header appears.
 - The selected worker/model is a concrete Copilot CLI dispatchable model ID, not `auto` and not a placeholder alias.
 - The fallback follows the ordered candidate list from `copilot-current`.
-- Activation report records `claude-opus-4.7` as unavailable and selects `claude-opus-4.8` or the next ranked compatible candidate.
+- Activation report records `claude-opus-4.7` as unavailable and selects `claude-sonnet-4.6` or the next ranked High-compatible candidate.
 ````
 
 - [ ] **Step 4: Review scenario numbering**

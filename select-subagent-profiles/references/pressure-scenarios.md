@@ -122,7 +122,7 @@ Expected with skill:
 - Task 2 uses `gpt-5.4` with high reasoning unless the task grows into cross-module lifecycle work.
 - Task 3 uses `gpt-5.5` with high or xhigh reviewer reasoning.
 - No row or task section uses only `Codex Spark`, `Standard Codex`, or `Most capable Codex`.
-- Activation report says model source came from Codex harness metadata or explicit context.
+- Activation report says model source came from the first ranked candidate source, such as installed Codex harness metadata, explicit context, or the built-in Codex Model Mapping when no fresher ranked source exists.
 
 ## Scenario 6: Bundled Reference Unavailable
 
