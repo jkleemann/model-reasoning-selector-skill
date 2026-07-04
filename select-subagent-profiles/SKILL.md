@@ -30,9 +30,9 @@ Then report:
 1. Detect whether the artifact is a subagent-driven implementation plan. Look for numbered tasks, task briefs, acceptance criteria, implementer/reviewer language, `superpowers:subagent-driven-development`, or an existing `Subagent Execution Profiles` section. If absent, skip and emit the required output header.
 2. Detect Harness Execution Mode: explicit caller mode, caller skill, review/dispatch/status context, plan artifact state, workflow language, then `unknown`.
 3. Apply write policy: draft/repair/post-review may update local files; pre-dispatch checks only unless explicitly allowed; implementation-active reports drift unless the user explicitly asks to mutate; unknown prefers patch-only.
-4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then existing plan profiles that already carry ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference. Resolve the task through the first matching ranked candidate source. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
+4. Discover current harness model capabilities before selecting workers. Prefer explicit caller `harness_profile`, then bundled harness profiles under `agents/`, then installed harness metadata with ranked candidates, then tool/system metadata with ranked candidates, then existing plan profiles that already carry ranked candidates, then flat tool metadata/system-exposed model lists for availability and capability checks, then existing plan model names for harness/provider inference. Resolve the task through the first matching ranked candidate source. When the prompt, active harness, model names, or provider evidence mention OpenCode, OpenRouter, `openrouter/...`, or LiteLLM routed to OpenRouter, load `agents/openrouter-opencode.yaml` relative to this `SKILL.md` and use it as the ranked candidate source unless the caller supplied a more specific `harness_profile`. When the harness is Codex and no fresher ranked candidate source is available, treat the built-in Codex Model Mapping as the candidate source before generic fallback. If a visible catalog exists but no ranked candidate source exists, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of calling discovery failed. State that model capability discovery failed only when no harness profile, bundled profile, ranked candidate source, built-in Codex mapping, or flat capability/catalog evidence is available.
 5. Classify each task and update both the global table and task start section. Current task text wins over stale profile entries.
-6. Choose concrete worker/model names from the first ranked candidate source whenever dispatch requires them. For Codex, use exact model IDs from the active harness profile or the built-in Codex Model Mapping when no fresher ranked source exists.
+6. Choose concrete worker/model names from the first ranked candidate source whenever dispatch requires them. For Codex, use exact model IDs from the active harness profile or the built-in Codex Model Mapping when no fresher ranked source exists. For OpenCode using the OpenRouter provider, write dispatchable model IDs in `openrouter/<provider>/<model>` form; if a bundled profile model id is an OpenRouter API id such as `minimax/minimax-m2.5`, apply the profile's `dispatch_id_template`.
 7. Apply the Model Selection Policy after ranked candidate lookup and before final worker/model selection, regardless of whether candidates came from a harness profile, installed metadata, tool/system metadata, an existing ranked plan profile, or the built-in Codex mapping. Blocklist beats allowlist, allowlist constrains candidates, capability/role fit comes before preference, and no fallback may choose an unranked model from a large catalog.
 8. Emit the required activation report.
 
@@ -50,7 +50,7 @@ Use the least expensive worker that fits the task's expected total turns and ris
 
 Model selection policy: [none | applied from harness profile `profile-name`; blocklist/allowlist constraints were enforced before worker selection; fallback used from `preferred-model` to `selected-model` because `reason`.]
 
-Model source: [caller harness_profile | installed harness metadata | tool/system ranked metadata | existing ranked plan profile | built-in Codex Model Mapping | flat catalog visibility only | unavailable, generic aliases used]. Candidate order came from [ranked source `source-name` | policy `policy-name` | built-in Codex Model Mapping | unavailable].
+Model source: [caller harness_profile | bundled OpenRouter/OpenCode profile | installed harness metadata | tool/system ranked metadata | existing ranked plan profile | built-in Codex Model Mapping | flat catalog visibility only | unavailable, generic aliases used]. Candidate order came from [ranked source `source-name` | policy `policy-name` | built-in Codex Model Mapping | unavailable].
 
 Escalation rule: if a Low/Medium task gets blocked on codebase comprehension, retry once with Medium/High reasoning before using Extra High. If a task is blocked by missing context, provide the missing context before changing models. If a task is blocked by a wrong plan assumption, stop and update the plan rather than spending a larger model on a bad premise. After two concrete failed attempts caused by reasoning/comprehension limits, escalate the worker/model or reasoning level by one tier and record why.
 
@@ -158,22 +158,48 @@ Model policies are optional now but the skill must leave room for them. Apply po
 
 Large catalogs include explicit `catalog_size: large` or `requires_policy: true`, more than 20 models, broad providers such as `openrouter`, `opencode`, `litellm`, or `anyscale`, or many unrelated provider families. With weak large-catalog signals and no policy, warn and use generic labels such as `fast approved worker`, `standard approved worker`, or `most capable approved worker` only when the harness allows generic aliases. With `requires_policy: true`, do not select a specific model.
 
+## Bundled Harness Profiles
+
+This skill ships optional ranked harness profiles under `agents/`. They are not automatically loaded into every agent context, so you must explicitly read the relevant file when its harness matches the current request:
+
+| Harness or provider signal | Bundled profile | Use |
+| --- | --- | --- |
+| Codex/OpenAI and no fresher profile | `agents/openai.yaml` or built-in Codex Model Mapping | Small default GPT catalog. |
+| Copilot CLI | `agents/copilot.yaml` | Managed Copilot model IDs and reasoning controls. |
+| OpenCode, OpenRouter, `openrouter/...`, LiteLLM routed to OpenRouter | `agents/openrouter-opencode.yaml` | Cost-aware broad coding catalog with model-fit attributes. |
+
+For OpenCode/OpenRouter, the bundled profile is the default ranked source whenever no caller `harness_profile` is supplied. Do not fall back to the Codex Model Mapping just because this `SKILL.md` contains an inline Codex table; the Codex table is only for Codex when no fresher ranked source exists.
+
+## Model Fit Attributes
+
+Harness profiles for broad catalogs may attach model-fit attributes such as `cost_class`, `speed_class`, `context_fit`, `strengths`, `weak_spots`, `input_cost_per_mtok_usd`, `output_cost_per_mtok_usd`, and `domain_overrides`. Treat these as selection signals after task difficulty classification and before fallback order. They are especially important for OpenRouter/OpenCode-style catalogs where many models are cheap but uneven across coding domains.
+
+Use model-fit attributes this way:
+
+1. Extract task domain signals from the task text, acceptance criteria, files, framework names, and verification scope. Common coding signals include Java, Kotlin, Spring Boot, SQL, database migrations, repo-wide refactors, debugging, test generation, long context, and security-sensitive review.
+2. Apply matching `domain_overrides` by boosting candidates whose `strengths` match the task. A boosted candidate must still satisfy role, availability, policy, and reasoning requirements.
+3. Prefer `cost_class` and `speed_class` for Low and Medium tasks after required capability fit. Prefer `context_fit`, `strengths`, and reasoning support for High and Very High tasks.
+4. Do not select a model whose `weak_spots` directly conflict with the task risk unless every better-ranked candidate is unavailable and the Activation Report records the compromise.
+5. Use explicit prices only as relative guidance. Pricing is time-sensitive; when exact current price matters, refresh the provider catalog before changing the profile or making budget commitments.
+6. Keep expensive frontier models out of cost-aware OpenRouter/OpenCode dispatch candidates unless a caller policy explicitly allowlists them. They may remain as `comparison_anchor` entries.
+
 ## Model Catalog Resolution
 
 Harness profiles may provide a `task_profile_map` with ordered candidate models per difficulty and role. Resolve model selection in this order:
 
 1. Classify the task difficulty and implementer/reviewer reasoning target.
-2. Determine the matching harness/provider from explicit `harness_profile`, installed harness metadata, tool/system metadata, or harness/provider inference from existing plan model names. Prefer sources that include ranked candidates over flat model lists; use existing plan model names as a profile source only when they already come with a ranked profile or candidate list.
-3. Select the ranked candidate source in this order: explicit caller `harness_profile`, installed harness metadata with ranked candidates, tool/system metadata with ranked candidates, existing plan profiles that already carry ranked candidates, then the built-in Codex Model Mapping when the harness is Codex and no fresher ranked source exists.
-4. Use flat tool/system model lists only to confirm availability and capability for ranked candidates, or to prove that a visible but unranked catalog exists.
-5. If no ranked candidate source exists but visible catalog evidence does, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of selecting a specific unranked model.
-6. If no ranked candidate source exists and no capability/catalog evidence is visible at all, state that model capability discovery failed.
-7. When a ranked candidate source exists, remove models blocked by policy, excluded by allowlists, or lacking the required role/reasoning support, then choose the first remaining candidate.
-8. If no ranked candidate remains after filtering, lower reasoning by one adjacent level only when that downgrade restores a ranked candidate that still satisfies role fit, capability fit, and the task's difficulty/risk class; otherwise report policy resolution needed.
+2. Determine the matching harness/provider from explicit `harness_profile`, bundled harness profiles under `agents/`, installed harness metadata, tool/system metadata, or harness/provider inference from existing plan model names. Prefer sources that include ranked candidates over flat model lists; use existing plan model names as a profile source only when they already come with a ranked profile or candidate list.
+3. Select the ranked candidate source in this order: explicit caller `harness_profile`, matching bundled harness profile, installed harness metadata with ranked candidates, tool/system metadata with ranked candidates, existing plan profiles that already carry ranked candidates, then the built-in Codex Model Mapping when the harness is Codex and no fresher ranked source exists.
+4. If the ranked source includes model-fit attributes, apply task-domain boosts from `strengths`, `weak_spots`, `cost_class`, `speed_class`, `context_fit`, and `domain_overrides` before final candidate choice. Preserve deterministic order by moving boosted candidates ahead only within their difficulty/role candidate set; do not pull in unranked models from a large catalog.
+5. Use flat tool/system model lists only to confirm availability and capability for ranked candidates, or to prove that a visible but unranked catalog exists.
+6. If no ranked candidate source exists but visible catalog evidence does, warn and use generic approved aliases only where the harness permits them; when large-catalog rules require policy, report policy resolution needed instead of selecting a specific unranked model.
+7. If no ranked candidate source exists and no capability/catalog evidence is visible at all, state that model capability discovery failed.
+8. When a ranked candidate source exists, remove models blocked by policy, excluded by allowlists, or lacking the required role/reasoning support, then choose the first remaining candidate after any valid model-fit boost.
+9. If no ranked candidate remains after filtering, lower reasoning by one adjacent level only when that downgrade restores a ranked candidate that still satisfies role fit, capability fit, and the task's difficulty/risk class; otherwise report policy resolution needed.
 
 Fallbacks must be deterministic. Do not scan a broad provider catalog for an arbitrary substitute unless the harness profile or policy explicitly ranks that model. Visible but unranked catalogs are a policy/ranking gap, not a discovery failure. If a preferred model is unavailable or deliberately blocked, record the substitution in the Activation Report and, when it changes expected capability, in the plan's `Model selection policy` line.
 
-For harnesses that expose aliases instead of concrete model IDs, use approved dispatch aliases from the harness profile. For Codex, use the built-in Codex Model Mapping and concrete model IDs whenever no fresher ranked candidate list is available.
+For harnesses that expose aliases instead of concrete model IDs, use approved dispatch aliases from the harness profile. For OpenCode/OpenRouter, transform OpenRouter API ids to dispatch ids using `dispatch_id_template`, for example `minimax/minimax-m2.5` becomes `openrouter/minimax/minimax-m2.5`. For Codex, use the built-in Codex Model Mapping and concrete model IDs whenever no fresher ranked candidate list is available.
 
 ## Common Mistakes
 
@@ -184,4 +210,7 @@ For harnesses that expose aliases instead of concrete model IDs, use approved di
 - Editing a plan during `implementation-active` without explicit user instruction.
 - Writing generic Codex labels instead of concrete dispatchable Codex model IDs.
 - Picking arbitrary OpenRouter/OpenCode models from a huge unfiltered catalog.
+- Using the Codex inline table for an OpenCode/OpenRouter request instead of loading `agents/openrouter-opencode.yaml`.
+- Writing raw OpenRouter API model IDs in an OpenCode plan when the dispatchable id must be `openrouter/<provider>/<model>`.
+- Ignoring model-fit attributes in broad catalogs and treating every cheap model as interchangeable.
 - Confusing these orchestration profiles with domain fields named `ReasoningLevel`.

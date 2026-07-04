@@ -1,0 +1,491 @@
+interface:
+  display_name: "Select Subagent Profiles"
+  short_description: "Choose efficient OpenRouter/OpenCode subagent models"
+  default_prompt: "Use $select-subagent-profiles with the OpenRouter/OpenCode profile to annotate or refresh a subagent-driven implementation plan."
+
+harness_profile:
+  id: "openrouter-opencode-cost-aware-coding"
+  harnesses:
+    - "opencode"
+    - "openrouter"
+    - "litellm-openrouter"
+  catalog_size: "large"
+  requires_policy: false
+  dispatch_surface:
+    task: "concrete OpenRouter model IDs only"
+    model_id_format: "opencode dispatch IDs use openrouter/<provider>/<model>; OpenRouter API IDs in this file omit the leading openrouter/."
+    dispatch_id_template: "openrouter/{id}"
+    notes: "Do not choose arbitrary OpenRouter models outside this ranked catalog unless the caller supplies a policy-ranked override. When writing an OpenCode plan, render candidates through dispatch_id_template."
+  model_source:
+    retrieved_from: "OpenRouter /api/v1/models"
+    retrieved_date: "2026-07-04"
+    focus: "Coding, Java/Kotlin backend, database work, cost efficiency"
+  reasoning_levels:
+    - "none"
+    - "low"
+    - "medium"
+    - "high"
+    - "xhigh"
+  selection_strategy:
+    primary_order:
+      - "required_capabilities"
+      - "task_strength_match"
+      - "domain_override"
+      - "cost_class"
+      - "speed_class"
+      - "context_fit"
+      - "reasoning_support"
+      - "fallback_order"
+    cost_bias: "Prefer the cheapest model expected to finish in the fewest total turns."
+    speed_bias: "Prefer fast or balanced models for Low and Medium tasks; allow slower models only for High or Very High tasks needing long context or stronger reasoning."
+    frontier_policy: "Avoid expensive frontier models by default; keep them only as external comparison anchors, not dispatch candidates."
+  capability_tags:
+    - "agentic_tool_use"
+    - "cheap_batch_work"
+    - "code_review"
+    - "database_migrations"
+    - "database_review"
+    - "debugging"
+    - "java_backend"
+    - "kotlin_backend"
+    - "long_context"
+    - "repo_wide_refactor"
+    - "spring_boot"
+    - "sql_querying"
+    - "test_generation"
+  models:
+    - id: "deepseek/deepseek-v4-flash"
+      display_name: "DeepSeek V4 Flash"
+      provider: "DeepSeek"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["high", "xhigh"]
+      default_reasoning: "high"
+      tier: "low"
+      cost_class: "ultra_low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.09
+      output_cost_per_mtok_usd: 0.18
+      context_window: 1048576
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["cheap_batch_work", "long_context", "debugging", "agentic_tool_use", "test_generation"]
+      weak_spots: ["security_sensitive_review", "architecture_redesign"]
+      notes: "Best ultra-cheap default for bounded implementation, verification, and broad-context triage."
+    - id: "deepseek/deepseek-v3.2"
+      display_name: "DeepSeek V3.2"
+      provider: "DeepSeek"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "low"
+      cost_class: "ultra_low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.229
+      output_cost_per_mtok_usd: 0.343
+      context_window: 131072
+      context_fit: "focused_repo"
+      supports_tools: true
+      strengths: ["cheap_batch_work", "code_review", "debugging", "test_generation"]
+      weak_spots: ["long_context", "large_architecture_redesign"]
+      notes: "Cheap review/check candidate when the task fits in a smaller context window."
+    - id: "z-ai/glm-4.7-flash"
+      display_name: "GLM 4.7 Flash"
+      provider: "Z.ai"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "low"
+      cost_class: "ultra_low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.06
+      output_cost_per_mtok_usd: 0.40
+      context_window: 202752
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["cheap_batch_work", "debugging", "code_review", "test_generation"]
+      weak_spots: ["very_large_context", "security_sensitive_review"]
+      notes: "Fast cheap fallback for Low/Medium tasks where DeepSeek is unavailable or blocked."
+    - id: "openai/gpt-oss-120b"
+      display_name: "OpenAI gpt-oss-120b"
+      provider: "OpenAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "low"
+      cost_class: "ultra_low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.03
+      output_cost_per_mtok_usd: 0.15
+      context_window: 131072
+      context_fit: "focused_repo"
+      supports_tools: true
+      strengths: ["cheap_batch_work", "test_generation", "code_review"]
+      weak_spots: ["large_repo", "complex_backend_semantics"]
+      notes: "Very cheap fallback for bounded tasks; do not use as primary for complex Java/Kotlin behavior changes."
+    - id: "minimax/minimax-m2.5"
+      display_name: "MiniMax M2.5"
+      provider: "MiniMax"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["low", "medium", "high"]
+      default_reasoning: "medium"
+      tier: "medium"
+      cost_class: "very_low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.12
+      output_cost_per_mtok_usd: 0.48
+      context_window: 204800
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["java_backend", "kotlin_backend", "spring_boot", "database_migrations", "debugging", "test_generation", "code_review"]
+      weak_spots: ["very_large_context", "security_sensitive_review"]
+      notes: "Primary cheap coding workhorse for Java/Kotlin backend tasks with focused tests."
+    - id: "minimax/minimax-m2.7"
+      display_name: "MiniMax M2.7"
+      provider: "MiniMax"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      default_reasoning: "medium"
+      tier: "medium"
+      cost_class: "low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.18
+      output_cost_per_mtok_usd: 0.72
+      context_window: 204800
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["java_backend", "kotlin_backend", "spring_boot", "database_review", "debugging", "test_generation", "agentic_tool_use"]
+      weak_spots: ["very_large_context"]
+      notes: "Step-up MiniMax option for High backend tasks when M2.5 is too weak."
+    - id: "minimax/minimax-m3"
+      display_name: "MiniMax M3"
+      provider: "MiniMax"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high", "xhigh"]
+      default_reasoning: "high"
+      tier: "high"
+      cost_class: "low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.30
+      output_cost_per_mtok_usd: 1.20
+      context_window: 1048576
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["long_context", "repo_wide_refactor", "agentic_tool_use", "java_backend", "database_migrations", "debugging"]
+      weak_spots: ["latency_sensitive_tasks"]
+      notes: "Use for large-context backend or database work before escalating to GLM 5.2."
+    - id: "qwen/qwen3-coder-next"
+      display_name: "Qwen3 Coder Next"
+      provider: "Qwen"
+      roles: ["implementer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "medium"
+      cost_class: "low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.11
+      output_cost_per_mtok_usd: 0.80
+      context_window: 262144
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["java_backend", "kotlin_backend", "agentic_tool_use", "test_generation", "debugging"]
+      weak_spots: ["reasoning_control", "final_review"]
+      notes: "Cheap coding implementer when explicit reasoning controls are not required."
+    - id: "qwen/qwen3-coder"
+      display_name: "Qwen3 Coder 480B A35B"
+      provider: "Qwen"
+      roles: ["implementer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "high"
+      cost_class: "low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.22
+      output_cost_per_mtok_usd: 1.80
+      context_window: 1048576
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["long_context", "repo_wide_refactor", "agentic_tool_use", "java_backend", "kotlin_backend", "spring_boot"]
+      weak_spots: ["reasoning_control", "critical_review"]
+      notes: "Strong long-context coder; pair with a reviewer that supports reasoning."
+    - id: "qwen/qwen3-coder-flash"
+      display_name: "Qwen3 Coder Flash"
+      provider: "Qwen"
+      roles: ["implementer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "medium"
+      cost_class: "low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.195
+      output_cost_per_mtok_usd: 0.975
+      context_window: 1000000
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["long_context", "cheap_batch_work", "java_backend", "test_generation"]
+      weak_spots: ["reasoning_control", "complex_database_review"]
+      notes: "Fast long-context coding fallback."
+    - id: "qwen/qwen3-coder-plus"
+      display_name: "Qwen3 Coder Plus"
+      provider: "Qwen"
+      roles: ["implementer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "high"
+      cost_class: "medium"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.65
+      output_cost_per_mtok_usd: 3.25
+      context_window: 1000000
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["long_context", "repo_wide_refactor", "agentic_tool_use", "java_backend", "kotlin_backend"]
+      weak_spots: ["cost_sensitive_batch_work", "reasoning_control"]
+      notes: "Use only when Qwen coder quality is specifically desired and cost is acceptable."
+    - id: "z-ai/glm-4.6"
+      display_name: "GLM 4.6"
+      provider: "Z.ai"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      default_reasoning: "medium"
+      tier: "medium"
+      cost_class: "low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.43
+      output_cost_per_mtok_usd: 1.74
+      context_window: 202752
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["code_review", "debugging", "database_review", "agentic_tool_use"]
+      weak_spots: ["very_large_context"]
+      notes: "Balanced reasoning-enabled reviewer for Medium/High tasks."
+    - id: "z-ai/glm-5"
+      display_name: "GLM 5"
+      provider: "Z.ai"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high", "xhigh"]
+      default_reasoning: "high"
+      tier: "high"
+      cost_class: "low"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.60
+      output_cost_per_mtok_usd: 1.92
+      context_window: 202752
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["code_review", "database_review", "debugging", "agentic_tool_use", "java_backend"]
+      weak_spots: ["very_large_context"]
+      notes: "High-reasoning reviewer/implementer before GLM 5.2 when 200K context is enough."
+    - id: "z-ai/glm-5.2"
+      display_name: "GLM 5.2"
+      provider: "Z.ai"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["high", "xhigh"]
+      default_reasoning: "high"
+      tier: "very_high"
+      cost_class: "medium"
+      speed_class: "slow"
+      input_cost_per_mtok_usd: 0.84
+      output_cost_per_mtok_usd: 2.64
+      context_window: 1048576
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["long_context", "repo_wide_refactor", "code_review", "database_review", "agentic_tool_use", "java_backend", "kotlin_backend"]
+      weak_spots: ["latency_sensitive_tasks", "cheap_batch_work"]
+      notes: "Use for Very High long-horizon project work and critical reviews; still far cheaper than frontier GPT/Claude."
+    - id: "moonshotai/kimi-k2.5"
+      display_name: "Kimi K2.5"
+      provider: "MoonshotAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      default_reasoning: "medium"
+      tier: "medium"
+      cost_class: "medium"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.375
+      output_cost_per_mtok_usd: 2.025
+      context_window: 262144
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["agentic_tool_use", "debugging", "test_generation", "java_backend"]
+      weak_spots: ["cost_sensitive_batch_work"]
+      notes: "Kimi-family fallback when K2.7 Code is too expensive for the task."
+    - id: "moonshotai/kimi-k2.6"
+      display_name: "Kimi K2.6"
+      provider: "MoonshotAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      default_reasoning: "high"
+      tier: "high"
+      cost_class: "medium"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.66
+      output_cost_per_mtok_usd: 3.41
+      context_window: 262144
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["agentic_tool_use", "repo_wide_refactor", "debugging", "java_backend", "kotlin_backend"]
+      weak_spots: ["cheap_batch_work"]
+      notes: "Use when Kimi behavior is specifically preferred and K2.7 Code is not required."
+    - id: "moonshotai/kimi-k2.7-code"
+      display_name: "Kimi K2.7 Code"
+      provider: "MoonshotAI"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: ["medium", "high"]
+      default_reasoning: "high"
+      tier: "high"
+      cost_class: "medium"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.74
+      output_cost_per_mtok_usd: 3.50
+      context_window: 262144
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["agentic_tool_use", "repo_wide_refactor", "debugging", "test_generation", "java_backend", "kotlin_backend"]
+      weak_spots: ["cost_sensitive_batch_work", "very_large_context"]
+      notes: "Coding-specialized Kimi option; prefer for agentic coding tasks where Kimi is explicitly desired."
+    - id: "mistralai/codestral-2508"
+      display_name: "Codestral 2508"
+      provider: "Mistral"
+      roles: ["implementer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "medium"
+      cost_class: "low"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.30
+      output_cost_per_mtok_usd: 0.90
+      context_window: 256000
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["test_generation", "debugging", "java_backend", "cheap_batch_work"]
+      weak_spots: ["reasoning_control", "critical_review"]
+      notes: "Coding fallback for implementation-only tasks."
+    - id: "mistralai/devstral-2512"
+      display_name: "Devstral 2 2512"
+      provider: "Mistral"
+      roles: ["implementer", "reviewer"]
+      supports_reasoning: []
+      default_reasoning: "none"
+      tier: "medium"
+      cost_class: "medium"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 0.40
+      output_cost_per_mtok_usd: 2.00
+      context_window: 262144
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["agentic_tool_use", "debugging", "code_review", "test_generation"]
+      weak_spots: ["reasoning_control", "cost_sensitive_batch_work"]
+      notes: "Optional non-Chinese open-weight coding fallback."
+    - id: "openai/gpt-5.4-mini"
+      display_name: "GPT-5.4 Mini"
+      provider: "OpenAI"
+      roles: ["comparison_anchor"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "high"
+      cost_class: "medium"
+      speed_class: "fast"
+      input_cost_per_mtok_usd: 0.75
+      output_cost_per_mtok_usd: 4.50
+      context_window: 400000
+      context_fit: "medium_repo"
+      supports_tools: true
+      strengths: ["comparison_anchor", "java_backend", "agentic_tool_use", "code_review"]
+      weak_spots: ["openrouter_cost_default"]
+      notes: "Comparison anchor only in this profile; use native Codex/OpenAI profile for GPT dispatch."
+    - id: "openai/gpt-5.5"
+      display_name: "GPT-5.5"
+      provider: "OpenAI"
+      roles: ["comparison_anchor"]
+      supports_reasoning: ["low", "medium", "high", "xhigh"]
+      default_reasoning: "medium"
+      tier: "frontier"
+      cost_class: "frontier_expensive"
+      speed_class: "balanced"
+      input_cost_per_mtok_usd: 5.00
+      output_cost_per_mtok_usd: 30.00
+      context_window: 1050000
+      context_fit: "large_repo"
+      supports_tools: true
+      strengths: ["comparison_anchor", "complex_reasoning", "critical_review"]
+      weak_spots: ["cost"]
+      notes: "Comparison anchor only; blocked for dispatch by default."
+  task_profile_map:
+    Low:
+      implementer:
+        reasoning: "low"
+        required_strengths: ["cheap_batch_work"]
+        candidates: ["deepseek/deepseek-v4-flash", "z-ai/glm-4.7-flash", "openai/gpt-oss-120b", "deepseek/deepseek-v3.2"]
+      reviewer:
+        reasoning: "low"
+        required_strengths: ["code_review"]
+        candidates: ["deepseek/deepseek-v3.2", "z-ai/glm-4.7-flash", "deepseek/deepseek-v4-flash"]
+    Medium:
+      implementer:
+        reasoning: "medium"
+        required_strengths: ["java_backend", "test_generation"]
+        candidates: ["minimax/minimax-m2.5", "qwen/qwen3-coder-next", "deepseek/deepseek-v4-flash", "z-ai/glm-4.7-flash"]
+      reviewer:
+        reasoning: "medium"
+        required_strengths: ["code_review", "debugging"]
+        candidates: ["minimax/minimax-m2.5", "deepseek/deepseek-v3.2", "z-ai/glm-4.6", "z-ai/glm-4.7-flash"]
+    High:
+      implementer:
+        reasoning: "high"
+        required_strengths: ["java_backend", "agentic_tool_use"]
+        candidates: ["minimax/minimax-m2.7", "qwen/qwen3-coder", "minimax/minimax-m3", "moonshotai/kimi-k2.7-code", "z-ai/glm-5"]
+      reviewer:
+        reasoning: "high"
+        required_strengths: ["code_review", "database_review"]
+        candidates: ["z-ai/glm-5", "z-ai/glm-4.6", "minimax/minimax-m2.7", "z-ai/glm-5.2"]
+    Very High:
+      implementer:
+        reasoning: "high"
+        required_strengths: ["long_context", "repo_wide_refactor"]
+        candidates: ["z-ai/glm-5.2", "minimax/minimax-m3", "qwen/qwen3-coder", "moonshotai/kimi-k2.7-code"]
+      reviewer:
+        reasoning: "xhigh"
+        required_strengths: ["code_review", "long_context"]
+        candidates: ["z-ai/glm-5.2", "z-ai/glm-5", "minimax/minimax-m3"]
+    Extra High:
+      implementer:
+        reasoning: "xhigh"
+        required_strengths: ["long_context", "repo_wide_refactor", "agentic_tool_use"]
+        candidates: ["z-ai/glm-5.2", "minimax/minimax-m3"]
+      reviewer:
+        reasoning: "xhigh"
+        required_strengths: ["code_review", "database_review", "long_context"]
+        candidates: ["z-ai/glm-5.2", "z-ai/glm-5"]
+  domain_overrides:
+    java_kotlin_backend:
+      match_terms: ["java", "kotlin", "spring", "spring boot", "gradle", "maven", "jpa", "hibernate"]
+      prefer_strengths: ["java_backend", "kotlin_backend", "spring_boot", "test_generation"]
+      candidate_boost: ["minimax/minimax-m2.5", "minimax/minimax-m2.7", "qwen/qwen3-coder", "z-ai/glm-5.2"]
+    database_work:
+      match_terms: ["sql", "database", "migration", "schema", "postgres", "mysql", "transaction", "liquibase", "flyway"]
+      prefer_strengths: ["database_migrations", "database_review", "sql_querying"]
+      candidate_boost: ["minimax/minimax-m2.5", "minimax/minimax-m3", "z-ai/glm-5", "z-ai/glm-5.2"]
+    broad_repo_context:
+      match_terms: ["repo-wide", "large refactor", "module migration", "cross-module", "monorepo", "long context"]
+      prefer_strengths: ["long_context", "repo_wide_refactor", "agentic_tool_use"]
+      candidate_boost: ["z-ai/glm-5.2", "minimax/minimax-m3", "qwen/qwen3-coder", "deepseek/deepseek-v4-flash"]
+    kimi_preferred:
+      match_terms: ["kimi", "moonshot", "agentic coding", "long-horizon coding"]
+      prefer_strengths: ["agentic_tool_use", "repo_wide_refactor"]
+      candidate_boost: ["moonshotai/kimi-k2.7-code", "moonshotai/kimi-k2.6", "moonshotai/kimi-k2.5"]
+  policy:
+    allowlist: []
+    blocklist:
+      - "openai/gpt-5.5"
+      - "openai/gpt-5.5-pro"
+      - "openai/gpt-5.4"
+      - "openai/gpt-5.4-pro"
+      - "anthropic/claude-opus-*"
+    unavailable: []
+    notes:
+      - "OpenAI GPT and Claude frontier models are comparison anchors only in this cost-aware OpenRouter/OpenCode profile."
+      - "Models without explicit reasoning controls may still be implementer candidates, but do not use them for critical final review unless no reasoning-enabled reviewer is available."
+      - "For Java/Kotlin/database work, boost strength-matched models before applying generic difficulty fallback order."
+      - "Use GLM 5.2 sparingly for Very High long-context or critical review tasks."
+      - "Use Kimi K2.7 Code when Kimi/Moonshot behavior is explicitly preferred or agentic coding quality is worth the extra output cost."

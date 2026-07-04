@@ -17,6 +17,31 @@ The skill reads or receives an implementation plan and adds or refreshes:
 
 The canonical behavior lives in [select-subagent-profiles/SKILL.md](select-subagent-profiles/SKILL.md). The files in [select-subagent-profiles/references/](select-subagent-profiles/references/) are examples and pressure scenarios, not the authority for runtime behavior.
 
+## Installation
+
+The repo provides one installer for the common local SKILL.md harness directories:
+
+```bash
+scripts/install-skill.sh
+```
+
+By default it installs `select-subagent-profiles` for Codex and Copilot via symlink:
+
+- Codex: `$CODEX_HOME/skills/select-subagent-profiles` or `~/.codex/skills/select-subagent-profiles`
+- Copilot: `$COPILOT_HOME/skills/select-subagent-profiles` or `~/.copilot/skills/select-subagent-profiles`
+
+Optional targets are available for other local harnesses that understand directory-based `SKILL.md` skills:
+
+```bash
+scripts/install-skill.sh --all
+scripts/install-skill.sh --harness codex --harness copilot
+scripts/install-skill.sh --harness claude
+scripts/install-skill.sh --harness gemini
+scripts/install-skill.sh --harness agents
+```
+
+The installer refuses to overwrite an existing target that points somewhere else unless `--force` is passed. Use `--dry-run` to inspect planned changes, or `--copy` when a harness cannot follow symlinks.
+
 ## What Changes In A Plan
 
 The skill does not rewrite the plan's domain steps. It adds orchestration metadata around the existing tasks so a coordinator can dispatch subagents with the right worker/model and review strength.
@@ -155,6 +180,14 @@ Typical manual invocation:
 apply the skill $select-subagent-profiles for this plan
 ```
 
+OpenCode with OpenRouter invocation:
+
+```text
+Use the select-subagent-profiles skill. Harness/provider is OpenCode with OpenRouter. Load agents/openrouter-opencode.yaml and use dispatchable openrouter/... model IDs.
+```
+
+Use the OpenCode/OpenRouter wording when the resulting plan will be dispatched through `opencode` with models such as `openrouter/minimax/minimax-m2.5` or `openrouter/z-ai/glm-5.2`. The extra sentence matters because OpenCode loads `SKILL.md` first; the skill must explicitly open the bundled `agents/openrouter-opencode.yaml` catalog before selecting from the broad OpenRouter model list.
+
 Typical composition invocation from another planning or review skill:
 
 ```yaml
@@ -197,6 +230,7 @@ Current catalogs:
 
 - [select-subagent-profiles/agents/openai.yaml](select-subagent-profiles/agents/openai.yaml) for Codex/OpenAI.
 - [select-subagent-profiles/agents/copilot.yaml](select-subagent-profiles/agents/copilot.yaml) for Copilot CLI.
+- [select-subagent-profiles/agents/openrouter-opencode.yaml](select-subagent-profiles/agents/openrouter-opencode.yaml) for OpenCode with OpenRouter.
 
 Each catalog has the same core shape:
 
@@ -244,6 +278,29 @@ Important fields:
 - `models[].availability`: set to `available`, `unavailable`, or a local status label.
 - `task_profile_map`: ordered candidates per difficulty and role. Candidate order is the fallback order.
 
+### Capability Model
+
+Large catalogs need more than a difficulty-to-model table. The OpenRouter/OpenCode catalog adds model-fit attributes so the skill can choose among many cheap models without treating them as interchangeable.
+
+Common attributes:
+
+- `cost_class`: rough price tier such as `ultra_low`, `very_low`, `low`, `medium`, or `frontier_expensive`.
+- `speed_class`: rough latency/throughput tier such as `fast`, `balanced`, or `slow`.
+- `context_fit`: whether the model is better for `focused_repo`, `medium_repo`, or `large_repo` tasks.
+- `strengths`: task types the model should be preferred for.
+- `weak_spots`: task types where the model should be avoided unless all better candidates are unavailable.
+- `domain_overrides`: task-text match rules that boost models for domains such as Java/Kotlin backend, database work, broad repo context, or Kimi-preferred coding.
+
+Examples:
+
+- A focused Spring Boot change with tests should boost models with `java_backend`, `kotlin_backend`, `spring_boot`, and `test_generation`, such as `openrouter/minimax/minimax-m2.5`.
+- A database migration or transaction-safety review should boost `database_migrations`, `database_review`, and `sql_querying`, for example `openrouter/minimax/minimax-m3` or `openrouter/z-ai/glm-5`.
+- A repo-wide module migration should boost `long_context` and `repo_wide_refactor`, which can move `openrouter/z-ai/glm-5.2`, `openrouter/minimax/minimax-m3`, or `openrouter/qwen/qwen3-coder` ahead of cheaper focused-task models.
+- A cheap mechanical verification pass should prefer `cheap_batch_work`, `cost_class: ultra_low`, and `speed_class: fast`, such as `openrouter/deepseek/deepseek-v4-flash`.
+- A critical final review should avoid models whose `weak_spots` include `critical_review`, `security_sensitive_review`, or missing reasoning control.
+
+The skill applies these attributes after classifying task difficulty and before choosing the final fallback. A boosted model must still satisfy role, availability, policy, and reasoning requirements.
+
 ## Fallback Selection
 
 Fallbacks are deterministic. The skill does not scan a broad provider catalog and invent a substitute. It chooses the first candidate that survives policy, availability, role, and reasoning checks.
@@ -251,15 +308,38 @@ Fallbacks are deterministic. The skill does not scan a broad provider catalog an
 Resolution order:
 
 1. classify task difficulty;
-2. select the first ranked candidate source: explicit caller `harness_profile`, installed harness metadata, tool/system ranked metadata, existing ranked plan profile, then built-in Codex mapping;
+2. select the first ranked candidate source: explicit caller `harness_profile`, matching bundled profile under `agents/`, installed harness metadata, tool/system ranked metadata, existing ranked plan profile, then built-in Codex mapping for Codex only;
 3. filter blocked, disallowed, unavailable, wrong-role, or wrong-reasoning models;
-4. choose the first remaining candidate;
-5. if no candidate remains, lower reasoning by one adjacent level only when that still fits task risk;
-6. otherwise report policy resolution needed.
+4. apply model-fit boosts from strengths, weak spots, cost, speed, context fit, and domain overrides when the ranked source provides them;
+5. choose the first remaining candidate;
+6. if no candidate remains, lower reasoning by one adjacent level only when that still fits task risk;
+7. otherwise report policy resolution needed.
 
 For Codex, the built-in fallback mapping in `SKILL.md` uses concrete model IDs such as `gpt-5.4-mini`, `gpt-5.4`, and `gpt-5.5` when no fresher ranked catalog is available.
 
 For Copilot CLI, task dispatch requires concrete model IDs. `auto` is only valid for Copilot `create_session` and `save_workflow`, not task dispatch.
+
+For OpenCode with OpenRouter, raw OpenRouter API IDs from the catalog are rendered with the catalog's `dispatch_id_template`. For example, `minimax/minimax-m2.5` becomes `openrouter/minimax/minimax-m2.5`.
+
+### Capacity Failures During Dispatch
+
+A capacity failure means the selected provider/model could not start the assigned work. It is treated like a temporary availability problem, not like a failed implementation attempt, a reasoning failure, or evidence that the task needs a broader scope.
+
+When a preferred model fails at capacity before doing work, the coordinator should:
+
+- keep the same task boundary, acceptance criteria, and implementation instructions;
+- pick the next ranked candidate for the same difficulty, role, and reasoning requirement;
+- state that the substitution is caused by capacity, not by a change in task complexity;
+- record the fallback in the visible dispatch/update message;
+- use `policy.unavailable` or `models[].availability: "unavailable"` only when the outage should affect later selections too.
+
+Example:
+
+```text
+The recommended gpt-5.4-mini implementer failed on capacity before it could start work. I am falling back to gpt-5.4 with Medium reasoning for the same bounded task; scope and acceptance criteria remain unchanged.
+```
+
+If all ranked candidates for the task fail capacity or are filtered out by policy, the coordinator should stop and report that model availability or policy resolution is needed instead of silently broadening the task or changing the plan.
 
 ## Whitelisting And Blacklisting Models
 
