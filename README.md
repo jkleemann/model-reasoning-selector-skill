@@ -15,32 +15,34 @@ The skill reads or receives an implementation plan and adds or refreshes:
 - fallback and escalation rules;
 - an activation report that states what changed, what was skipped, and where model capability data came from.
 
-The canonical behavior lives in [select-subagent-profiles/SKILL.md](select-subagent-profiles/SKILL.md). The files in [select-subagent-profiles/references/](select-subagent-profiles/references/) are examples and pressure scenarios, not the authority for runtime behavior.
+The canonical behavior lives in [.agents/skills/select-subagent-profiles/SKILL.md](.agents/skills/select-subagent-profiles/SKILL.md). The files in [.agents/skills/select-subagent-profiles/references/](.agents/skills/select-subagent-profiles/references/) are examples and pressure scenarios, not the authority for runtime behavior.
 
 ## Installation
 
-The repo provides one installer for the common local SKILL.md harness directories:
+Install with the skills CLI:
 
 ```bash
-scripts/install-skill.sh
+npx skills add jkleemann/model-reasoning-selector-skill -s select-subagent-profiles -a warp -g
 ```
 
-By default it installs `select-subagent-profiles` for Codex and Copilot via symlink:
-
-- Codex: `$CODEX_HOME/skills/select-subagent-profiles` or `~/.codex/skills/select-subagent-profiles`
-- Copilot: `$COPILOT_HOME/skills/select-subagent-profiles` or `~/.copilot/skills/select-subagent-profiles`
-
-Optional targets are available for other local harnesses that understand directory-based `SKILL.md` skills:
+This installs the skill globally (`-g`) for Warp. You can also target other agents:
 
 ```bash
-scripts/install-skill.sh --all
-scripts/install-skill.sh --harness codex --harness copilot
-scripts/install-skill.sh --harness claude
-scripts/install-skill.sh --harness gemini
-scripts/install-skill.sh --harness agents
+# Install for Claude Code
+npx skills add jkleemann/model-reasoning-selector-skill -s select-subagent-profiles -a claude-code -g
+
+# Install for multiple agents
+npx skills add jkleemann/model-reasoning-selector-skill -s select-subagent-profiles -a warp -a claude-code -a codex -g
+
+# Install for all supported agents
+npx skills add jkleemann/model-reasoning-selector-skill -s select-subagent-profiles -a '*' -g
 ```
 
-The installer refuses to overwrite an existing target that points somewhere else unless `--force` is passed. Use `--dry-run` to inspect planned changes, or `--copy` when a harness cannot follow symlinks.
+Run without flags for interactive selection:
+
+```bash
+npx skills add jkleemann/model-reasoning-selector-skill
+```
 
 ## What Changes In A Plan
 
@@ -224,13 +226,13 @@ The skill separates why it was invoked from the execution state of the plan.
 
 ## Agent-Specific YAML Catalogs
 
-Harness/provider model catalogs live under [select-subagent-profiles/agents/](select-subagent-profiles/agents/).
+Harness/provider model catalogs live under [.agents/skills/select-subagent-profiles/agents/](.agents/skills/select-subagent-profiles/agents/).
 
 Current catalogs:
 
-- [select-subagent-profiles/agents/openai.yaml](select-subagent-profiles/agents/openai.yaml) for Codex/OpenAI.
-- [select-subagent-profiles/agents/copilot.yaml](select-subagent-profiles/agents/copilot.yaml) for Copilot CLI.
-- [select-subagent-profiles/agents/openrouter-opencode.yaml](select-subagent-profiles/agents/openrouter-opencode.yaml) for OpenCode with OpenRouter.
+- [.agents/skills/select-subagent-profiles/agents/openai.yaml](.agents/skills/select-subagent-profiles/agents/openai.yaml) for Codex/OpenAI.
+- [.agents/skills/select-subagent-profiles/agents/copilot.yaml](.agents/skills/select-subagent-profiles/agents/copilot.yaml) for Copilot CLI.
+- [.agents/skills/select-subagent-profiles/agents/openrouter-opencode.yaml](.agents/skills/select-subagent-profiles/agents/openrouter-opencode.yaml) for OpenCode with OpenRouter.
 
 Each catalog has the same core shape:
 
@@ -392,8 +394,8 @@ Then provide an allowlist and ranked `task_profile_map`. Without that, the skill
 
 ## Maintainer Notes
 
-- Keep the canonical output and resolution contract in `select-subagent-profiles/SKILL.md`.
-- Keep provider-specific availability and fallback order in `select-subagent-profiles/agents/*.yaml`.
+- Keep the canonical output and resolution contract in `.agents/skills/select-subagent-profiles/SKILL.md`.
+- Keep provider-specific availability and fallback order in `.agents/skills/select-subagent-profiles/agents/*.yaml`.
 - Add new harness catalogs as new YAML files rather than mixing unrelated providers into one file.
 - Preserve concrete dispatchable IDs for Codex and Copilot task dispatch.
-- Use pressure scenarios in [select-subagent-profiles/references/pressure-scenarios.md](select-subagent-profiles/references/pressure-scenarios.md) when changing skill behavior.
+- Use pressure scenarios in [.agents/skills/select-subagent-profiles/references/pressure-scenarios.md](.agents/skills/select-subagent-profiles/references/pressure-scenarios.md) when changing skill behavior.
